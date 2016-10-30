@@ -342,6 +342,7 @@ static int hls_append_segment(struct AVFormatContext *s, HLSContext *hls, double
         av_free(tmp);
     }
     av_strlcpy(en->filename, filename, sizeof(en->filename));
+    av_log(NULL, AV_LOG_INFO, "EXT-X-SEGMENTFILE:%s\n", en->filename); // every .ts file is completed .TSTS
 
     if(hls->has_subtitle)
         av_strlcpy(en->sub_filename, av_basename(hls->vtt_avf->filename), sizeof(en->sub_filename));
@@ -352,6 +353,7 @@ static int hls_append_segment(struct AVFormatContext *s, HLSContext *hls, double
     en->pos      = pos;
     en->size     = size;
     en->next     = NULL;
+    av_log(NULL, AV_LOG_INFO, "#EXTINF:%f,\n", en->duration); // every .ts file completed duration .TSTS
 
     if (hls->key_info_file) {
         av_strlcpy(en->key_uri, hls->key_uri, sizeof(en->key_uri));
@@ -517,6 +519,7 @@ fail:
     ff_format_io_close(s, &sub_out);
     if (ret >= 0 && use_rename)
         ff_rename(temp_filename, s->filename, s);
+    av_log(NULL, AV_LOG_INFO, "EXT-X-MEDIA-SEQUENCE:%"PRId64"\n",sequence); // every .m3u8 file completed .TSTS
     return ret;
 }
 

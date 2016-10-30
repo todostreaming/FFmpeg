@@ -1530,7 +1530,7 @@ static void print_report(int is_last_report, int64_t timer_start, int64_t cur_ti
             last_time = cur_time;
             return;
         }
-        if ((cur_time - last_time) < 500000)
+        if ((cur_time - last_time) < 500000) // log every 500 ms
             return;
         last_time = cur_time;
     }
@@ -1564,10 +1564,10 @@ static void print_report(int is_last_report, int64_t timer_start, int64_t cur_ti
 
             frame_number = ost->frame_number;
             fps = t > 1 ? frame_number / t : 0;
-            snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "frame=%5d fps=%3.*f q=%3.1f ",
-                     frame_number, fps < 9.95, fps, q);
+            snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "frame=%d fps=%.2f ",
+                     frame_number, fps); // .TSTS
             av_bprintf(&buf_script, "frame=%d\n", frame_number);
-            av_bprintf(&buf_script, "fps=%.1f\n", fps);
+            av_bprintf(&buf_script, "fps=%.2f\n", fps);
             av_bprintf(&buf_script, "stream_%d_%d_q=%.1f\n",
                        ost->file_index, ost->index, q);
             if (is_last_report)
@@ -1633,7 +1633,7 @@ static void print_report(int is_last_report, int64_t timer_start, int64_t cur_ti
     if (total_size < 0) snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf),
                                  "size=N/A time=");
     else                snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf),
-                                 "size=%8.0fkB time=", total_size / 1024.0);
+                                 "size=%.0fkB time=", total_size / 1024.0); // .TSTS
     if (pts < 0)
         snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf), "-");
     snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf),
@@ -1644,8 +1644,8 @@ static void print_report(int is_last_report, int64_t timer_start, int64_t cur_ti
         snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf),"bitrate=N/A");
         av_bprintf(&buf_script, "bitrate=N/A\n");
     }else{
-        snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf),"bitrate=%6.1fkbits/s", bitrate);
-        av_bprintf(&buf_script, "bitrate=%6.1fkbits/s\n", bitrate);
+        snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf),"bitrate=%.0fkbits/s", bitrate); //.TSTS
+        av_bprintf(&buf_script, "bitrate=%.0fkbits/s\n", bitrate); //.TSTS
     }
 
     if (total_size < 0) av_bprintf(&buf_script, "total_size=N/A\n");
@@ -1664,12 +1664,12 @@ static void print_report(int is_last_report, int64_t timer_start, int64_t cur_ti
         snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf)," speed=N/A");
         av_bprintf(&buf_script, "speed=N/A\n");
     } else {
-        snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf)," speed=%4.3gx", speed);
-        av_bprintf(&buf_script, "speed=%4.3gx\n", speed);
+        snprintf(buf + strlen(buf), sizeof(buf) - strlen(buf)," speed=%.2gx", speed); //.TSTS
+        av_bprintf(&buf_script, "speed=%.2gx\n", speed); //.TSTS
     }
 
     if (print_stats || is_last_report) {
-        const char end = is_last_report ? '\n' : '\r';
+        const char end = is_last_report ? '\n' : '\n'; //.TSTS second new line
         if (print_stats==1 && AV_LOG_INFO > av_log_get_level()) {
             fprintf(stderr, "%s    %c", buf, end);
         } else
