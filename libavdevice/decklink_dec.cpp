@@ -248,6 +248,7 @@ HRESULT decklink_input_callback::VideoInputFrameArrived(
 
     // Handle Video Frame
     if (videoFrame) {
+    	videoFrame->AddRef(); //.TSTS
         AVPacket pkt;
         av_init_packet(&pkt);
         if (ctx->frameCount % 25 == 0) {
@@ -385,6 +386,8 @@ HRESULT decklink_input_callback::VideoInputFrameArrived(
             ++ctx->dropped;
         }
     }
+
+    if (videoFrame) videoFrame->Release(); //.TSTS
 
     return S_OK;
 }
