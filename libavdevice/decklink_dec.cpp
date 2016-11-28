@@ -241,15 +241,22 @@ HRESULT decklink_input_callback::VideoInputFrameArrived(
 {
     void *frameBytes;
     void *audioFrameBytes;
-    BMDTimeValue frameTime;
-    BMDTimeValue frameDuration;
+    BMDTimeScale    timeScale = 1000; // milliseconds (ticks per second)
+    BMDTimeValue    frameTime = 0;
+    BMDTimeValue    frameDuration = 0;
+    BMDTimeValue    packetTime = 0;
+    static int64_t  __video_pts, __audio_pts;
+
 
     ctx->frameCount++;
 
     // Handle Video Frame
     if (videoFrame) {
     	videoFrame->AddRef(); //.TSTS
-        AVPacket pkt;
+		videoFrame->GetStreamTime(&frameTime, &frameDuration, timeScale);
+		__video_pts = frameTime;
+
+		AVPacket pkt;
         av_init_packet(&pkt);
         if (ctx->frameCount % 25 == 0) {
             unsigned long long qsize = avpacket_queue_size(&ctx->queue);
@@ -364,7 +371,10 @@ HRESULT decklink_input_callback::VideoInputFrameArrived(
         BMDTimeValue audio_pts;
         av_init_packet(&pkt);
 
-        //hack among hacks
+		audioFrame->GetPacketTime(&packetTime, timeScale);
+		__audio_pts = packetTime;
+
+		//hack among hacks
         pkt.size = audioFrame->GetSampleFrameCount() * ctx->audio_st->codecpar->channels * (16 / 8);
         audioFrame->GetBytes(&audioFrameBytes);
         audioFrame->GetPacketTime(&audio_pts, ctx->audio_st->time_base.den);
@@ -386,6 +396,8 @@ HRESULT decklink_input_callback::VideoInputFrameArrived(
             ++ctx->dropped;
         }
     }
+
+    av_log(NULL, AV_LOG_INFO, "#A-V(ms):%d\n", __audio_pts - __video_pts);
 
     if (videoFrame) videoFrame->Release(); //.TSTS
 
